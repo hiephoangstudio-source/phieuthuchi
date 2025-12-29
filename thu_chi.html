@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phiếu Thu - Chi (Fit A4)</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Times+New+Roman:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+        
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: 'Times New Roman', serif; 
+            font-size: 11pt; 
+            line-height: 1.25; /* Giảm line-height nhẹ */
+            color: #000; 
+            background-color: #f0f2f5; 
+            margin: 0; 
+            padding: 0; 
+        }
+
+        @page { size: A4 portrait; margin: 0; }
+
+        .actions-container { 
+            position: sticky; top: 0; display: flex; justify-content: center; gap: 15px;
+            width: 100%; background-color: #343a40; padding: 10px; z-index: 2000; 
+        }
+        .action-btn { 
+            background-color: #0d6efd; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;
+        }
+
+        .page-wrapper { display: flex; justify-content: center; padding: 20px; }
+
+        .a4-page {
+            width: 210mm;
+            height: 296mm; /* Giảm 1mm để tránh lỗi làm tròn pixel gây nhảy trang */
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Quan trọng: Ngăn tràn nội dung */
+        }
+
+        /* --- CẤU HÌNH KHUNG --- */
+        .voucher-half {
+            height: 50%; /* Chia đôi trang chính xác */
+            /* Giảm padding trên dưới xuống còn 10mm và 5mm */
+            padding: 10mm 15mm 5mm 15mm; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .cut-line {
+            width: 90%; 
+            margin: 0 auto; 
+            border-top: 1px dashed #999; 
+            height: 0; 
+        }
+
+        /* --- HEADER --- */
+        .header-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
+        .header-left { flex: 1; padding-right: 10px; }
+        .studio-name { font-weight: bold; font-size: 11pt; text-transform: uppercase; display: block; margin-bottom: 2px; }
+        .studio-info-line { display: block; font-size: 10pt; margin-bottom: 1px; }
+
+        .header-right { text-align: left; min-width: 140px; }
+        .voucher-num-line { font-size: 10pt; margin-bottom: 2px; }
+
+        /* --- TITLE --- */
+        .title-section { text-align: center; margin-bottom: 8px; }
+        .main-title { font-size: 16pt; font-weight: bold; text-transform: uppercase; margin: 0; line-height: 1.2; }
+        .date-sub { font-style: italic; font-size: 10.5pt; margin: 2px 0; }
+        .copy-info { font-weight: bold; font-size: 9pt; }
+
+        /* --- FORM --- */
+        .form-body { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+        .line-row { display: flex; align-items: baseline; margin-bottom: 5px; width: 100%; }
+        .label { white-space: nowrap; margin-right: 5px; font-size: 11pt; }
+        .value { flex-grow: 1; border-bottom: 1px dotted #000; font-weight: bold; padding-left: 5px; min-width: 50px; font-size: 11pt; }
+        .value.italic { font-weight: normal; font-style: italic; }
+
+        .double-row { display: flex; align-items: baseline; justify-content: space-between; gap: 15px; margin-bottom: 5px; width: 100%; }
+        .half-row { display: flex; align-items: baseline; flex: 1; }
+
+        /* --- CHỮ KÝ --- */
+        .signature-section { display: flex; justify-content: space-between; text-align: center; margin-top: 5px; }
+        .sig-col { width: 24%; }
+        .sig-title { font-weight: bold; font-size: 10.5pt; margin-bottom: 2px; }
+        .sig-note { font-style: italic; font-size: 9pt; margin-top: 0; margin-bottom: 35px; /* Giảm khoảng trống ký từ 50px xuống 35px */ }
+        .sig-name { font-weight: bold; font-size: 10.5pt; }
+
+        @media print {
+            body { background: none; }
+            .actions-container { display: none; }
+            .page-wrapper { padding: 0; block-size: border-box; }
+            .a4-page { box-shadow: none; width: 100%; height: 296mm; page-break-after: avoid; }
+            /* Buộc nội dung fit trang khi in */
+            html, body { height: 100%; overflow: hidden; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="actions-container">
+        <button onclick="window.print()" class="action-btn">🖨️ In Phiếu</button>
+        <button onclick="downloadPDF()" class="action-btn">📄 Tải PDF</button>
+    </div>
+
+    <div class="page-wrapper">
+        <div class="a4-page" id="print-area">
+            
+            <!-- LIÊN 1 -->
+            <div class="voucher-half">
+                <div>
+                    <div class="header-section">
+                        <div class="header-left">
+                            <span class="studio-name data-ten-studio">2H STUDIO</span>
+                            <span class="studio-info-line">ĐC: <span class="data-dia-chi-studio">...</span></span>
+                            <span class="studio-info-line">Email: <span class="data-email-studio">...</span></span>
+                            <span class="studio-info-line">Hotline: <span class="data-sdt-studio">...</span> - Zalo: <span class="data-zalo-studio">...</span></span>
+                        </div>
+                        <div class="header-right">
+                            <div class="voucher-num-line">Quyển số: ...........</div>
+                            <div class="voucher-num-line">Số: <span class="data-ma-phieu">..........</span></div>
+                        </div>
+                    </div>
+
+                    <div class="title-section">
+                        <h1 class="main-title data-tieu-de">PHIẾU THU</h1>
+                        <div class="date-sub data-ngay-thang">Ngày ... tháng ... năm ...</div>
+                        <div class="copy-info">Liên 1 (Lưu)</div>
+                    </div>
+
+                    <div class="form-body">
+                        <div class="line-row">
+                            <span class="label data-label-nguoi-nop">Họ và tên người nộp tiền:</span>
+                            <span class="value data-nguoi-nop"></span>
+                        </div>
+                        <div class="line-row">
+                            <span class="label">Địa chỉ:</span>
+                            <span class="value data-dia-chi-kh"></span>
+                        </div>
+                        <div class="line-row">
+                            <span class="label">Lý do nộp:</span>
+                            <span class="value data-ly-do"></span>
+                        </div>
+                        
+                        <div class="double-row">
+                            <div class="half-row" style="flex: 0.6;">
+                                <span class="label">Hình thức:</span>
+                                <span class="value data-hinh-thuc"></span>
+                            </div>
+                            <div class="half-row" style="flex: 1.4;">
+                                <span class="label">STK:</span>
+                                <span class="value data-stk"></span>
+                            </div>
+                        </div>
+
+                        <div class="line-row">
+                            <span class="label">Số tiền:</span>
+                            <span class="value data-so-tien-so"></span>
+                        </div>
+                        <div class="line-row">
+                            <span class="label">(Bằng chữ):</span>
+                            <span class="value italic data-so-tien-chu"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="signature-section">
+                    <div class="sig-col">
+                        <div class="sig-title data-label-nguoi-nop-ky">Người nộp tiền</div>
+                        <p class="sig-note">(Ký, họ tên)</p>
+                        <div class="sig-name data-nguoi-nop"></div>
+                    </div>
+                    <div class="sig-col">
+                        <div class="sig-title">Người lập phiếu</div>
+                        <p class="sig-note">(Ký, họ tên)</p>
+                        <div class="sig-name data-nguoi-lap"></div>
+                    </div>
+                    <div class="sig-col">
+                        <div class="sig-title">Thủ quỹ</div>
+                        <p class="sig-note">(Ký, họ tên)</p>
+                    </div>
+                    <div class="sig-col">
+                        <div class="sig-title">Thủ trưởng</div>
+                        <p class="sig-note">(Ký, họ tên)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cut-line"></div>
+
+            <!-- LIÊN 2 -->
+            <div class="voucher-half">
+                <div>
+                    <div class="header-section">
+                        <div class="header-left">
+                            <span class="studio-name data-ten-studio">2H STUDIO</span>
+                            <span class="studio-info-line">ĐC: <span class="data-dia-chi-studio">...</span></span>
+                            <span class="studio-info-line">Email: <span class="data-email-studio">...</span></span>
+                            <span class="studio-info-line">Hotline: <span class="data-sdt-studio">...</span> - Zalo: <span class="data-zalo-studio">...</span></span>
+                        </div>
+                        <div class="header-right">
+                            <div class="voucher-num-line">Quyển số: ...........</div>
+                            <div class="voucher-num-line">Số: <span class="data-ma-phieu">..........</span></div>
+                        </div>
+                    </div>
+
+                    <div class="title-section">
+                        <h1 class="main-title data-tieu-de">PHIẾU THU</h1>
+                        <div class="date-sub data-ngay-thang">Ngày ... tháng ... năm ...</div>
+                        <div class="copy-info">Liên 2 (Giao khách)</div>
+                    </div>
+
+                    <div class="form-body">
+                        <div class="line-row">
+                            <span class="label data-label-nguoi-nop">Họ và tên người nộp tiền:</span>
+                            <span class="value data-nguoi-nop"></span>
+                        </div>
+                        <div class="line-row">
+                            <span class="label">Địa chỉ:</span>
+                            <span class="value data-dia-chi-kh"></span>
+                        </div>
+                        <div class="line-row">
+                            <span class="label">Lý do nộp:</span>
+                            <span class="value data-ly-do"></span>
+                        </div>
+                        
+                        <div class="double-row">
+                            <div class="half-row" style="flex: 0.6;">
+                                <span class="label">Hình thức:</span>
+                                <span class="value data-hinh-thuc"></span>
+                            </div>
+                            <div class="half-row" style="flex: 1.4;">
+                                <span class="label">STK:</span>
+                                <span class="value data-stk"></span>
+                            </div>
+                        </div>
+
+                        <div class="line-row">
+                            <span class="label">Số tiền:</span>
+                            <span class="value data-so-tien-so"></span>
+                        </div>
+                        <div class="line-row">
+                            <span class="label">(Bằng chữ):</span>
+                            <span class="value italic data-so-tien-chu"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="signature-section">
+                    <div class="sig-col">
+                        <div class="sig-title data-label-nguoi-nop-ky">Người nộp tiền</div>
+                        <p class="sig-note">(Ký, họ tên)</p>
+                        <div class="sig-name data-nguoi-nop"></div>
+                    </div>
+                    <div class="sig-col">
+                        <div class="sig-title">Người lập phiếu</div>
+                        <p class="sig-note">(Ký, họ tên)</p>
+                        <div class="sig-name data-nguoi-lap"></div>
+                    </div>
+                    <div class="sig-col">
+                        <div class="sig-title">Thủ quỹ</div>
+                        <p class="sig-note">(Ký, họ tên)</p>
+                    </div>
+                    <div class="sig-col">
+                        <div class="sig-title">Thủ trưởng</div>
+                        <p class="sig-note">(Ký, họ tên)</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function readNumberInVietnamese(number) { 
+            const units=["","một","hai","ba","bốn","năm","sáu","bảy","tám","chín"];
+            const groupUnits=[""," nghìn"," triệu"," tỷ"," nghìn tỷ"," triệu tỷ"];
+            function convertBlock(e){if("000"===e)return"";let t=parseInt(e[0]),r=parseInt(e[1]),n=parseInt(e[2]),i="";return t>0&&(i+=units[t]+" trăm"),0===r&&n>0?i+=t>0?" linh "+units[n]:units[n]:1===r?(i+=" mười",5===n?i+=" lăm":n>0&&(i+=" "+units[n])):r>1&&(i+=" "+units[r]+" mươi",1===n?i+=" mốt":5===n?i+=" lăm":n>0&&(i+=" "+units[n])),i.trim()}
+            let numStr=String(parseInt(number,10)); if("0"===numStr||isNaN(parseInt(number))) return "Không đồng";
+            let chunks=[]; for(;numStr.length>0;)chunks.unshift(numStr.slice(-3)),numStr=numStr.slice(0,-3);
+            const result=chunks.map((e,t)=>{for(;e.length<3;)e="0"+e;const r=convertBlock(e);if(!r)return"";let n=groupUnits[chunks.length-1-t];return 0===parseInt(e)&&" nghìn"===n?"":r+n}).filter(Boolean).join(" ");
+            let final = (result.charAt(0).toUpperCase()+result.slice(1)).trim()+" đồng chẵn";
+            return final.replace(/  /g, " "); 
+        }
+
+        function setTextByClass(className, text) {
+            const elements = document.querySelectorAll('.' + className);
+            elements.forEach(el => el.textContent = text);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            // Demo data for preview if no URL params
+            let data = {
+                hang_muc: 'Thu',
+                ten_studio: '2H STUDIO',
+                dia_chi_studio: '111 Hoàng Cầu',
+                email: '2hstudio.net@gmail.com',
+                phone: '0826268111',
+                zalo: '2H Studio',
+                ngay_lap: '2025-10-15',
+                ma_phieu: '7a0bc562',
+                doi_tuong: 'Khách hàng Demo',
+                dia_chi_kh: 'Hà Nội',
+                noi_dung: 'THANH TOÁN LẦN 2',
+                so_tien: '6000000',
+                nguoi_tao: 'NV001',
+                hinh_thuc: 'Chuyển khoản',
+                stk: 'ACB-91926',
+                chu_tk: 'PHẠM VĂN ÁNH' 
+            };
+
+            if (urlParams.has('so_tien')) {
+                data.hang_muc = urlParams.get('hang_muc') || 'Thu';
+                data.ten_studio = urlParams.get('ten_studio');
+                data.dia_chi_studio = urlParams.get('diachi_studio');
+                data.email = urlParams.get('email_studio');
+                data.phone = urlParams.get('dienthoai_studio');
+                data.zalo = urlParams.get('zalo_studio');
+                
+                data.ngay_lap = urlParams.get('ngay_lap');
+                data.ma_phieu = urlParams.get('id_thu_chi');
+                data.doi_tuong = urlParams.get('doi_tuong');
+                data.dia_chi_kh = urlParams.get('dia_chi') || '';
+                data.noi_dung = urlParams.get('noi_dung');
+                data.so_tien = urlParams.get('so_tien');
+                data.nguoi_tao = urlParams.get('nguoi_tao');
+                data.hinh_thuc = urlParams.get('hinh_thuc_tt') || '';
+                
+                data.stk = urlParams.get('stk') || '';
+                data.chu_tk = urlParams.get('chu_tk') || '';
+            }
+
+            const isChi = data.hang_muc.toLowerCase() === 'chi';
+
+            setTextByClass('data-tieu-de', isChi ? 'PHIẾU CHI' : 'PHIẾU THU');
+            setTextByClass('data-label-nguoi-nop', isChi ? 'Họ và tên người nhận tiền:' : 'Họ và tên người nộp tiền:');
+            setTextByClass('data-label-nguoi-nop-ky', isChi ? 'Người nhận tiền' : 'Người nộp tiền');
+
+            setTextByClass('data-ten-studio', data.ten_studio);
+            setTextByClass('data-dia-chi-studio', data.dia_chi_studio);
+            setTextByClass('data-email-studio', data.email);
+            setTextByClass('data-sdt-studio', data.phone);
+            setTextByClass('data-zalo-studio', data.zalo);
+            
+            setTextByClass('data-ma-phieu', data.ma_phieu);
+            setTextByClass('data-nguoi-nop', data.doi_tuong);
+            setTextByClass('data-dia-chi-kh', data.dia_chi_kh);
+            setTextByClass('data-ly-do', data.noi_dung);
+            setTextByClass('data-nguoi-lap', data.nguoi_tao);
+            
+            // Xử lý hiển thị Hình thức
+            setTextByClass('data-hinh-thuc', data.hinh_thuc);
+            
+            // Xử lý hiển thị STK + (Chủ TK)
+            let hien_thi_stk = data.stk;
+            if (data.chu_tk && data.stk) {
+                hien_thi_stk += ` (${data.chu_tk})`;
+            }
+            setTextByClass('data-stk', hien_thi_stk);
+
+            let d = new Date();
+            if(data.ngay_lap) d = new Date(data.ngay_lap);
+            if(isNaN(d.getTime())) d = new Date();
+            const dateStr = `Ngày ${d.getDate().toString().padStart(2,'0')} tháng ${(d.getMonth()+1).toString().padStart(2,'0')} năm ${d.getFullYear()}`;
+            setTextByClass('data-ngay-thang', dateStr);
+
+            const rawMoney = data.so_tien.toString().replace(/,/g, '').replace(/\./g, '');
+            const moneyVal = parseInt(rawMoney, 10);
+            setTextByClass('data-so-tien-so', moneyVal.toLocaleString('vi-VN') + ' VNĐ');
+            setTextByClass('data-so-tien-chu', readNumberInVietnamese(moneyVal));
+            
+            document.title = (isChi ? "PC_" : "PT_") + data.ma_phieu;
+        });
+
+        function downloadPDF() {
+            const element = document.getElementById('print-area');
+            const opt = {
+                margin: 0,
+                filename: document.title + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().from(element).set(opt).save();
+        }
+    </script>
+</body>
+</html>
