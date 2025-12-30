@@ -89,7 +89,7 @@
         /* --- CHỮ KÝ --- */
         .signature-section { display: flex; justify-content: space-between; text-align: center; margin-top: 5px; }
         .sig-col { width: 24%; }
-        .sig-title { font-weight: bold; font-size: 10.5pt; margin-bottom: 2px; }
+        .sig-title { font-weight: bold; font-size: 10.5pt; margin-bottom: 2px; min-height: 18px; /* Giữ chiều cao nếu text rỗng */ }
         .sig-note { font-style: italic; font-size: 9pt; margin-top: 0; margin-bottom: 35px; }
         .sig-name { font-weight: bold; font-size: 10.5pt; }
 
@@ -125,7 +125,6 @@
                         <div class="header-right">
                             <div class="voucher-num-line">Quyển số: ...........</div>
                             <div class="voucher-num-line">Số: <span class="data-ma-phieu">..........</span></div>
-                            <!-- THÊM DÒNG SỐ HD -->
                             <div class="voucher-num-line">Số HD: <span class="data-so-hd">..........</span></div>
                         </div>
                     </div>
@@ -175,7 +174,8 @@
                 <div class="signature-section">
                     <div class="sig-col">
                         <div class="sig-title data-label-nguoi-nop-ky">Người nộp tiền</div>
-                        <p class="sig-note">(Ký, họ tên)</p>
+                        <!-- Thêm class partner-note để JS ẩn đi khi cần -->
+                        <p class="sig-note partner-note">(Ký, họ tên)</p>
                         <div class="sig-name data-nguoi-nop"></div>
                     </div>
                     <div class="sig-col">
@@ -188,7 +188,8 @@
                         <p class="sig-note">(Ký, họ tên)</p>
                     </div>
                     <div class="sig-col">
-                        <div class="sig-title">Thủ trưởng</div>
+                        <!-- YÊU CẦU 1: Đổi Thủ trưởng thành Đại diện cửa hàng -->
+                        <div class="sig-title">Đại diện cửa hàng</div>
                         <p class="sig-note">(Ký, họ tên)</p>
                     </div>
                 </div>
@@ -209,7 +210,6 @@
                         <div class="header-right">
                             <div class="voucher-num-line">Quyển số: ...........</div>
                             <div class="voucher-num-line">Số: <span class="data-ma-phieu">..........</span></div>
-                            <!-- THÊM DÒNG SỐ HD -->
                             <div class="voucher-num-line">Số HD: <span class="data-so-hd">..........</span></div>
                         </div>
                     </div>
@@ -259,7 +259,8 @@
                 <div class="signature-section">
                     <div class="sig-col">
                         <div class="sig-title data-label-nguoi-nop-ky">Người nộp tiền</div>
-                        <p class="sig-note">(Ký, họ tên)</p>
+                        <!-- Thêm class partner-note để JS ẩn đi khi cần -->
+                        <p class="sig-note partner-note">(Ký, họ tên)</p>
                         <div class="sig-name data-nguoi-nop"></div>
                     </div>
                     <div class="sig-col">
@@ -272,7 +273,8 @@
                         <p class="sig-note">(Ký, họ tên)</p>
                     </div>
                     <div class="sig-col">
-                        <div class="sig-title">Thủ trưởng</div>
+                        <!-- YÊU CẦU 1: Đổi Thủ trưởng thành Đại diện cửa hàng -->
+                        <div class="sig-title">Đại diện cửa hàng</div>
                         <p class="sig-note">(Ký, họ tên)</p>
                     </div>
                 </div>
@@ -311,7 +313,7 @@
                 zalo: '2H Studio',
                 ngay_lap: '2025-10-15',
                 ma_phieu: '7a0bc562',
-                so_hd: 'HD-DEMO', // Mặc định
+                so_hd: 'HD-DEMO',
                 doi_tuong: 'Khách hàng Demo',
                 dia_chi_kh: 'Hà Nội',
                 noi_dung: 'THANH TOÁN LẦN 2',
@@ -332,7 +334,7 @@
                 
                 data.ngay_lap = urlParams.get('ngay_lap');
                 data.ma_phieu = urlParams.get('id_thu_chi');
-                data.so_hd = urlParams.get('so_hd') || ''; // Lấy số HD từ URL
+                data.so_hd = urlParams.get('so_hd') || '';
                 
                 data.doi_tuong = urlParams.get('doi_tuong');
                 data.dia_chi_kh = urlParams.get('dia_chi') || '';
@@ -349,8 +351,20 @@
 
             setTextByClass('data-tieu-de', isChi ? 'PHIẾU CHI' : 'PHIẾU THU');
             setTextByClass('data-label-ly-do', isChi ? 'Lý do chi:' : 'Lý do nộp:');
-            setTextByClass('data-label-nguoi-nop-ky', isChi ? 'Người nhận tiền' : 'Người nộp tiền');
             setTextByClass('data-label-nguoi-nop', 'Khách hàng:');
+            
+            // --- XỬ LÝ YÊU CẦU 2 ---
+            const partnerNotes = document.querySelectorAll('.partner-note');
+            if (isChi) {
+                // Nếu là PHIẾU CHI: Bỏ thông tin Người nhận tiền (tiêu đề rỗng) và ẩn (Ký, họ tên)
+                setTextByClass('data-label-nguoi-nop-ky', ''); 
+                partnerNotes.forEach(el => el.style.display = 'none');
+            } else {
+                // Nếu là PHIẾU THU: Hiện bình thường
+                setTextByClass('data-label-nguoi-nop-ky', 'Người nộp tiền');
+                partnerNotes.forEach(el => el.style.display = 'block');
+            }
+            // -----------------------
             
             setTextByClass('data-ten-studio', data.ten_studio);
             setTextByClass('data-dia-chi-studio', data.dia_chi_studio);
@@ -359,7 +373,7 @@
             setTextByClass('data-zalo-studio', data.zalo);
             
             setTextByClass('data-ma-phieu', data.ma_phieu);
-            setTextByClass('data-so-hd', data.so_hd); // Điền số HD
+            setTextByClass('data-so-hd', data.so_hd);
             setTextByClass('data-nguoi-nop', data.doi_tuong);
             setTextByClass('data-dia-chi-kh', data.dia_chi_kh);
             setTextByClass('data-ly-do', data.noi_dung);
