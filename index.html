@@ -89,7 +89,7 @@
         /* --- CHỮ KÝ --- */
         .signature-section { display: flex; justify-content: space-between; text-align: center; margin-top: 5px; }
         .sig-col { width: 24%; }
-        .sig-title { font-weight: bold; font-size: 10.5pt; margin-bottom: 2px; min-height: 18px; /* Giữ chiều cao nếu text rỗng */ }
+        .sig-title { font-weight: bold; font-size: 10.5pt; margin-bottom: 2px; min-height: 19px; }
         .sig-note { font-style: italic; font-size: 9pt; margin-top: 0; margin-bottom: 35px; }
         .sig-name { font-weight: bold; font-size: 10.5pt; }
 
@@ -174,7 +174,7 @@
                 <div class="signature-section">
                     <div class="sig-col">
                         <div class="sig-title data-label-nguoi-nop-ky">Người nộp tiền</div>
-                        <!-- Thêm class partner-note để JS ẩn đi khi cần -->
+                        <!-- partner-note dùng để ẩn dòng ký khi là phiếu chi -->
                         <p class="sig-note partner-note">(Ký, họ tên)</p>
                         <div class="sig-name data-nguoi-nop"></div>
                     </div>
@@ -188,7 +188,6 @@
                         <p class="sig-note">(Ký, họ tên)</p>
                     </div>
                     <div class="sig-col">
-                        <!-- YÊU CẦU 1: Đổi Thủ trưởng thành Đại diện cửa hàng -->
                         <div class="sig-title">Đại diện cửa hàng</div>
                         <p class="sig-note">(Ký, họ tên)</p>
                     </div>
@@ -259,7 +258,7 @@
                 <div class="signature-section">
                     <div class="sig-col">
                         <div class="sig-title data-label-nguoi-nop-ky">Người nộp tiền</div>
-                        <!-- Thêm class partner-note để JS ẩn đi khi cần -->
+                        <!-- partner-note dùng để ẩn dòng ký khi là phiếu chi -->
                         <p class="sig-note partner-note">(Ký, họ tên)</p>
                         <div class="sig-name data-nguoi-nop"></div>
                     </div>
@@ -273,7 +272,6 @@
                         <p class="sig-note">(Ký, họ tên)</p>
                     </div>
                     <div class="sig-col">
-                        <!-- YÊU CẦU 1: Đổi Thủ trưởng thành Đại diện cửa hàng -->
                         <div class="sig-title">Đại diện cửa hàng</div>
                         <p class="sig-note">(Ký, họ tên)</p>
                     </div>
@@ -297,7 +295,10 @@
 
         function setTextByClass(className, text) {
             const elements = document.querySelectorAll('.' + className);
-            elements.forEach(el => el.textContent = text);
+            elements.forEach(el => {
+                if(text) el.textContent = text;
+                else el.textContent = '';
+            });
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -340,9 +341,12 @@
                 data.dia_chi_kh = urlParams.get('dia_chi') || '';
                 data.noi_dung = urlParams.get('noi_dung');
                 data.so_tien = urlParams.get('so_tien');
-                data.nguoi_tao = urlParams.get('nguoi_tao');
-                data.hinh_thuc = urlParams.get('hinh_thuc_tt') || '';
                 
+                // --- LOGIC MỚI: TÌM TÊN NGƯỜI LẬP TỪ NHIỀU NGUỒN ---
+                // Ưu tiên nguoi_tao, nếu không có thì tìm nguoi_lap, nhan_vien...
+                data.nguoi_tao = urlParams.get('nguoi_tao') || urlParams.get('nguoi_lap') || urlParams.get('nhan_vien') || '';
+                
+                data.hinh_thuc = urlParams.get('hinh_thuc_tt') || '';
                 data.stk = urlParams.get('stk') || '';
                 data.chu_tk = urlParams.get('chu_tk') || '';
             }
@@ -353,19 +357,20 @@
             setTextByClass('data-label-ly-do', isChi ? 'Lý do chi:' : 'Lý do nộp:');
             setTextByClass('data-label-nguoi-nop', 'Khách hàng:');
             
-            // --- XỬ LÝ YÊU CẦU 2 ---
+            // --- XỬ LÝ ẨN/HIỆN NGƯỜI NHẬN TIỀN (LIÊN 1) ---
             const partnerNotes = document.querySelectorAll('.partner-note');
             if (isChi) {
-                // Nếu là PHIẾU CHI: Bỏ thông tin Người nhận tiền (tiêu đề rỗng) và ẩn (Ký, họ tên)
+                // Nếu là PHIẾU CHI: 
+                // 1. Xóa chữ "Người nhận tiền" (Tiêu đề)
                 setTextByClass('data-label-nguoi-nop-ky', ''); 
+                // 2. Ẩn dòng "(Ký, họ tên)"
                 partnerNotes.forEach(el => el.style.display = 'none');
             } else {
-                // Nếu là PHIẾU THU: Hiện bình thường
+                // Nếu là PHIẾU THU: Hiện đầy đủ
                 setTextByClass('data-label-nguoi-nop-ky', 'Người nộp tiền');
                 partnerNotes.forEach(el => el.style.display = 'block');
             }
-            // -----------------------
-            
+
             setTextByClass('data-ten-studio', data.ten_studio);
             setTextByClass('data-dia-chi-studio', data.dia_chi_studio);
             setTextByClass('data-email-studio', data.email);
@@ -377,6 +382,8 @@
             setTextByClass('data-nguoi-nop', data.doi_tuong);
             setTextByClass('data-dia-chi-kh', data.dia_chi_kh);
             setTextByClass('data-ly-do', data.noi_dung);
+            
+            // Điền người lập phiếu (Cột 2)
             setTextByClass('data-nguoi-lap', data.nguoi_tao);
             
             setTextByClass('data-hinh-thuc', data.hinh_thuc);
