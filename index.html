@@ -16,7 +16,7 @@
         body { 
             font-family: 'Times New Roman', serif; 
             font-size: 11pt; 
-            line-height: 1.25; /* Giảm line-height nhẹ */
+            line-height: 1.25;
             color: #000; 
             background-color: #f0f2f5; 
             margin: 0; 
@@ -37,18 +37,17 @@
 
         .a4-page {
             width: 210mm;
-            height: 296mm; /* Giảm 1mm để tránh lỗi làm tròn pixel gây nhảy trang */
+            height: 296mm; 
             background: white;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Quan trọng: Ngăn tràn nội dung */
+            overflow: hidden; 
         }
 
         /* --- CẤU HÌNH KHUNG --- */
         .voucher-half {
-            height: 50%; /* Chia đôi trang chính xác */
-            /* Giảm padding trên dưới xuống còn 10mm và 5mm */
+            height: 50%; 
             padding: 10mm 15mm 5mm 15mm; 
             display: flex;
             flex-direction: column;
@@ -91,7 +90,7 @@
         .signature-section { display: flex; justify-content: space-between; text-align: center; margin-top: 5px; }
         .sig-col { width: 24%; }
         .sig-title { font-weight: bold; font-size: 10.5pt; margin-bottom: 2px; }
-        .sig-note { font-style: italic; font-size: 9pt; margin-top: 0; margin-bottom: 35px; /* Giảm khoảng trống ký từ 50px xuống 35px */ }
+        .sig-note { font-style: italic; font-size: 9pt; margin-top: 0; margin-bottom: 35px; }
         .sig-name { font-weight: bold; font-size: 10.5pt; }
 
         @media print {
@@ -99,7 +98,6 @@
             .actions-container { display: none; }
             .page-wrapper { padding: 0; block-size: border-box; }
             .a4-page { box-shadow: none; width: 100%; height: 296mm; page-break-after: avoid; }
-            /* Buộc nội dung fit trang khi in */
             html, body { height: 100%; overflow: hidden; }
         }
     </style>
@@ -127,6 +125,8 @@
                         <div class="header-right">
                             <div class="voucher-num-line">Quyển số: ...........</div>
                             <div class="voucher-num-line">Số: <span class="data-ma-phieu">..........</span></div>
+                            <!-- THÊM DÒNG SỐ HD -->
+                            <div class="voucher-num-line">Số HD: <span class="data-so-hd">..........</span></div>
                         </div>
                     </div>
 
@@ -138,7 +138,7 @@
 
                     <div class="form-body">
                         <div class="line-row">
-                            <span class="label data-label-nguoi-nop">Họ và tên người nộp tiền:</span>
+                            <span class="label data-label-nguoi-nop">Khách hàng:</span>
                             <span class="value data-nguoi-nop"></span>
                         </div>
                         <div class="line-row">
@@ -146,7 +146,7 @@
                             <span class="value data-dia-chi-kh"></span>
                         </div>
                         <div class="line-row">
-                            <span class="label">Lý do nộp:</span>
+                            <span class="label data-label-ly-do">Lý do nộp:</span>
                             <span class="value data-ly-do"></span>
                         </div>
                         
@@ -209,6 +209,8 @@
                         <div class="header-right">
                             <div class="voucher-num-line">Quyển số: ...........</div>
                             <div class="voucher-num-line">Số: <span class="data-ma-phieu">..........</span></div>
+                            <!-- THÊM DÒNG SỐ HD -->
+                            <div class="voucher-num-line">Số HD: <span class="data-so-hd">..........</span></div>
                         </div>
                     </div>
 
@@ -220,7 +222,7 @@
 
                     <div class="form-body">
                         <div class="line-row">
-                            <span class="label data-label-nguoi-nop">Họ và tên người nộp tiền:</span>
+                            <span class="label data-label-nguoi-nop">Khách hàng:</span>
                             <span class="value data-nguoi-nop"></span>
                         </div>
                         <div class="line-row">
@@ -228,7 +230,7 @@
                             <span class="value data-dia-chi-kh"></span>
                         </div>
                         <div class="line-row">
-                            <span class="label">Lý do nộp:</span>
+                            <span class="label data-label-ly-do">Lý do nộp:</span>
                             <span class="value data-ly-do"></span>
                         </div>
                         
@@ -299,7 +301,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             
-            // Demo data for preview if no URL params
+            // Demo data
             let data = {
                 hang_muc: 'Thu',
                 ten_studio: '2H STUDIO',
@@ -309,6 +311,7 @@
                 zalo: '2H Studio',
                 ngay_lap: '2025-10-15',
                 ma_phieu: '7a0bc562',
+                so_hd: 'HD-DEMO', // Mặc định
                 doi_tuong: 'Khách hàng Demo',
                 dia_chi_kh: 'Hà Nội',
                 noi_dung: 'THANH TOÁN LẦN 2',
@@ -329,6 +332,8 @@
                 
                 data.ngay_lap = urlParams.get('ngay_lap');
                 data.ma_phieu = urlParams.get('id_thu_chi');
+                data.so_hd = urlParams.get('so_hd') || ''; // Lấy số HD từ URL
+                
                 data.doi_tuong = urlParams.get('doi_tuong');
                 data.dia_chi_kh = urlParams.get('dia_chi') || '';
                 data.noi_dung = urlParams.get('noi_dung');
@@ -343,9 +348,10 @@
             const isChi = data.hang_muc.toLowerCase() === 'chi';
 
             setTextByClass('data-tieu-de', isChi ? 'PHIẾU CHI' : 'PHIẾU THU');
-            setTextByClass('data-label-nguoi-nop', isChi ? 'Họ và tên người nhận tiền:' : 'Họ và tên người nộp tiền:');
+            setTextByClass('data-label-ly-do', isChi ? 'Lý do chi:' : 'Lý do nộp:');
             setTextByClass('data-label-nguoi-nop-ky', isChi ? 'Người nhận tiền' : 'Người nộp tiền');
-
+            setTextByClass('data-label-nguoi-nop', 'Khách hàng:');
+            
             setTextByClass('data-ten-studio', data.ten_studio);
             setTextByClass('data-dia-chi-studio', data.dia_chi_studio);
             setTextByClass('data-email-studio', data.email);
@@ -353,15 +359,14 @@
             setTextByClass('data-zalo-studio', data.zalo);
             
             setTextByClass('data-ma-phieu', data.ma_phieu);
+            setTextByClass('data-so-hd', data.so_hd); // Điền số HD
             setTextByClass('data-nguoi-nop', data.doi_tuong);
             setTextByClass('data-dia-chi-kh', data.dia_chi_kh);
             setTextByClass('data-ly-do', data.noi_dung);
             setTextByClass('data-nguoi-lap', data.nguoi_tao);
             
-            // Xử lý hiển thị Hình thức
             setTextByClass('data-hinh-thuc', data.hinh_thuc);
             
-            // Xử lý hiển thị STK + (Chủ TK)
             let hien_thi_stk = data.stk;
             if (data.chu_tk && data.stk) {
                 hien_thi_stk += ` (${data.chu_tk})`;
