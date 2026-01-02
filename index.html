@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phiếu Thu - Chi (Fit A4)</title>
+    <title>Phiếu Thu - Chi (Tùy chọn in)</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -26,11 +26,14 @@
         @page { size: A4 portrait; margin: 0; }
 
         .actions-container { 
-            position: sticky; top: 0; display: flex; justify-content: center; gap: 15px;
+            position: sticky; top: 0; display: flex; justify-content: center; align-items: center; gap: 15px;
             width: 100%; background-color: #343a40; padding: 10px; z-index: 2000; 
         }
         .action-btn { 
-            background-color: #0d6efd; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;
+            background-color: #0d6efd; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; height: 36px;
+        }
+        .action-select {
+            padding: 0 10px; border-radius: 4px; height: 36px; cursor: pointer; border: 1px solid #ccc; outline: none; font-weight: bold;
         }
 
         .page-wrapper { display: flex; justify-content: center; padding: 20px; }
@@ -43,6 +46,7 @@
             display: flex;
             flex-direction: column;
             overflow: hidden; 
+            transition: all 0.3s ease;
         }
 
         /* --- CẤU HÌNH KHUNG --- */
@@ -60,6 +64,27 @@
             border-top: 1px dashed #999; 
             height: 0; 
         }
+
+        /* --- LOGIC HIỂN THỊ (QUAN TRỌNG) --- */
+        /* Khi chọn chỉ in Liên 1: Ẩn liên 2 và đường cắt */
+        .a4-page.mode-lien1 #lien-2,
+        .a4-page.mode-lien1 .cut-line {
+            display: none !important;
+        }
+
+        /* Khi chọn chỉ in Liên 2: Ẩn liên 1 và đường cắt */
+        .a4-page.mode-lien2 #lien-1,
+        .a4-page.mode-lien2 .cut-line {
+            display: none !important;
+        }
+
+        /* Khi in 1 liên lẻ, ta vẫn giữ chiều cao của nó là 50% trang A4 (A5) 
+           hoặc có thể để auto nếu muốn co gọn. Ở đây giữ 50% để layout không vỡ */
+        .a4-page.mode-lien1 .voucher-half,
+        .a4-page.mode-lien2 .voucher-half {
+            flex: 0 0 50%; /* Giữ cứng chiều cao 1 nửa trang */
+        }
+        /* ----------------------------------- */
 
         /* --- HEADER --- */
         .header-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
@@ -105,15 +130,22 @@
 <body>
 
     <div class="actions-container">
-        <button onclick="window.print()" class="action-btn">🖨️ In Phiếu</button>
-        <button onclick="downloadPDF()" class="action-btn">📄 Tải PDF</button>
+        <!-- SELECT BOX MỚI -->
+        <select id="printMode" class="action-select" onchange="changePrintMode()">
+            <option value="all">🖨️ In cả 2 Liên (A4)</option>
+            <option value="lien1">1️⃣ Chỉ in Liên 1</option>
+            <option value="lien2">2️⃣ Chỉ in Liên 2</option>
+        </select>
+        
+        <button onclick="window.print()" class="action-btn">In Phiếu</button>
+        <button onclick="downloadPDF()" class="action-btn">Tải PDF</button>
     </div>
 
     <div class="page-wrapper">
         <div class="a4-page" id="print-area">
             
-            <!-- LIÊN 1 -->
-            <div class="voucher-half">
+            <!-- LIÊN 1 (Thêm id="lien-1") -->
+            <div class="voucher-half" id="lien-1">
                 <div>
                     <div class="header-section">
                         <div class="header-left">
@@ -174,7 +206,6 @@
                 <div class="signature-section">
                     <div class="sig-col">
                         <div class="sig-title data-label-nguoi-nop-ky">Người nộp tiền</div>
-                        <!-- partner-note dùng để ẩn dòng ký khi là phiếu chi -->
                         <p class="sig-note partner-note">(Ký, họ tên)</p>
                         <div class="sig-name data-nguoi-nop"></div>
                     </div>
@@ -194,10 +225,11 @@
                 </div>
             </div>
 
+            <!-- ĐƯỜNG CẮT -->
             <div class="cut-line"></div>
 
-            <!-- LIÊN 2 -->
-            <div class="voucher-half">
+            <!-- LIÊN 2 (Thêm id="lien-2") -->
+            <div class="voucher-half" id="lien-2">
                 <div>
                     <div class="header-section">
                         <div class="header-left">
@@ -258,7 +290,6 @@
                 <div class="signature-section">
                     <div class="sig-col">
                         <div class="sig-title data-label-nguoi-nop-ky">Người nộp tiền</div>
-                        <!-- partner-note dùng để ẩn dòng ký khi là phiếu chi -->
                         <p class="sig-note partner-note">(Ký, họ tên)</p>
                         <div class="sig-name data-nguoi-nop"></div>
                     </div>
@@ -282,6 +313,22 @@
     </div>
 
     <script>
+        // HÀM XỬ LÝ CHUYỂN ĐỔI CHẾ ĐỘ IN
+        function changePrintMode() {
+            const mode = document.getElementById('printMode').value;
+            const container = document.getElementById('print-area');
+            
+            // Xóa hết class cũ
+            container.classList.remove('mode-lien1', 'mode-lien2');
+
+            // Thêm class mới dựa trên select
+            if (mode === 'lien1') {
+                container.classList.add('mode-lien1');
+            } else if (mode === 'lien2') {
+                container.classList.add('mode-lien2');
+            }
+        }
+
         function readNumberInVietnamese(number) { 
             const units=["","một","hai","ba","bốn","năm","sáu","bảy","tám","chín"];
             const groupUnits=[""," nghìn"," triệu"," tỷ"," nghìn tỷ"," triệu tỷ"];
@@ -342,8 +389,6 @@
                 data.noi_dung = urlParams.get('noi_dung');
                 data.so_tien = urlParams.get('so_tien');
                 
-                // --- LOGIC MỚI: TÌM TÊN NGƯỜI LẬP TỪ NHIỀU NGUỒN ---
-                // Ưu tiên nguoi_tao, nếu không có thì tìm nguoi_lap, nhan_vien...
                 data.nguoi_tao = urlParams.get('nguoi_tao') || urlParams.get('nguoi_lap') || urlParams.get('nhan_vien') || '';
                 
                 data.hinh_thuc = urlParams.get('hinh_thuc_tt') || '';
@@ -357,16 +402,11 @@
             setTextByClass('data-label-ly-do', isChi ? 'Lý do chi:' : 'Lý do nộp:');
             setTextByClass('data-label-nguoi-nop', 'Khách hàng:');
             
-            // --- XỬ LÝ ẨN/HIỆN NGƯỜI NHẬN TIỀN (LIÊN 1) ---
             const partnerNotes = document.querySelectorAll('.partner-note');
             if (isChi) {
-                // Nếu là PHIẾU CHI: 
-                // 1. Xóa chữ "Người nhận tiền" (Tiêu đề)
                 setTextByClass('data-label-nguoi-nop-ky', ''); 
-                // 2. Ẩn dòng "(Ký, họ tên)"
                 partnerNotes.forEach(el => el.style.display = 'none');
             } else {
-                // Nếu là PHIẾU THU: Hiện đầy đủ
                 setTextByClass('data-label-nguoi-nop-ky', 'Người nộp tiền');
                 partnerNotes.forEach(el => el.style.display = 'block');
             }
@@ -382,10 +422,7 @@
             setTextByClass('data-nguoi-nop', data.doi_tuong);
             setTextByClass('data-dia-chi-kh', data.dia_chi_kh);
             setTextByClass('data-ly-do', data.noi_dung);
-            
-            // Điền người lập phiếu (Cột 2)
             setTextByClass('data-nguoi-lap', data.nguoi_tao);
-            
             setTextByClass('data-hinh-thuc', data.hinh_thuc);
             
             let hien_thi_stk = data.stk;
