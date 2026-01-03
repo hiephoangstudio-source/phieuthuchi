@@ -49,13 +49,14 @@
             transition: all 0.3s ease;
         }
 
-        /* --- CẤU HÌNH KHUNG --- */
+        /* --- CẤU HÌNH KHUNG (ĐÃ SỬA) --- */
         .voucher-half {
             height: 50%; 
             padding: 10mm 15mm 5mm 15mm; 
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            /* ĐÃ SỬA: Đổi space-between thành flex-start để nội dung dồn lên trên */
+            justify-content: flex-start; 
         }
 
         .cut-line {
@@ -65,26 +66,15 @@
             height: 0; 
         }
 
-        /* --- LOGIC HIỂN THỊ (QUAN TRỌNG) --- */
-        /* Khi chọn chỉ in Liên 1: Ẩn liên 2 và đường cắt */
+        /* --- LOGIC HIỂN THỊ --- */
         .a4-page.mode-lien1 #lien-2,
-        .a4-page.mode-lien1 .cut-line {
-            display: none !important;
-        }
+        .a4-page.mode-lien1 .cut-line { display: none !important; }
 
-        /* Khi chọn chỉ in Liên 2: Ẩn liên 1 và đường cắt */
         .a4-page.mode-lien2 #lien-1,
-        .a4-page.mode-lien2 .cut-line {
-            display: none !important;
-        }
+        .a4-page.mode-lien2 .cut-line { display: none !important; }
 
-        /* Khi in 1 liên lẻ, ta vẫn giữ chiều cao của nó là 50% trang A4 (A5) 
-           hoặc có thể để auto nếu muốn co gọn. Ở đây giữ 50% để layout không vỡ */
         .a4-page.mode-lien1 .voucher-half,
-        .a4-page.mode-lien2 .voucher-half {
-            flex: 0 0 50%; /* Giữ cứng chiều cao 1 nửa trang */
-        }
-        /* ----------------------------------- */
+        .a4-page.mode-lien2 .voucher-half { flex: 0 0 50%; }
 
         /* --- HEADER --- */
         .header-section { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; }
@@ -96,23 +86,36 @@
         .voucher-num-line { font-size: 10pt; margin-bottom: 2px; }
 
         /* --- TITLE --- */
-        .title-section { text-align: center; margin-bottom: 8px; }
+        .title-section { text-align: center; margin-bottom: 15px; } /* Tăng khoảng cách dưới tiêu đề chút */
         .main-title { font-size: 16pt; font-weight: bold; text-transform: uppercase; margin: 0; line-height: 1.2; }
         .date-sub { font-style: italic; font-size: 10.5pt; margin: 2px 0; }
         .copy-info { font-weight: bold; font-size: 9pt; }
 
-        /* --- FORM --- */
-        .form-body { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
-        .line-row { display: flex; align-items: baseline; margin-bottom: 5px; width: 100%; }
+        /* --- FORM (ĐÃ SỬA) --- */
+        .form-body { 
+            /* ĐÃ SỬA: Bỏ flex-grow: 1 để form không giãn hết chỗ trống */
+            flex-grow: 0; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: flex-start;
+        }
+        
+        .line-row { display: flex; align-items: baseline; margin-bottom: 8px; width: 100%; } /* Tăng margin bottom chút cho thoáng */
         .label { white-space: nowrap; margin-right: 5px; font-size: 11pt; }
         .value { flex-grow: 1; border-bottom: 1px dotted #000; font-weight: bold; padding-left: 5px; min-width: 50px; font-size: 11pt; }
         .value.italic { font-weight: normal; font-style: italic; }
 
-        .double-row { display: flex; align-items: baseline; justify-content: space-between; gap: 15px; margin-bottom: 5px; width: 100%; }
+        .double-row { display: flex; align-items: baseline; justify-content: space-between; gap: 15px; margin-bottom: 8px; width: 100%; }
         .half-row { display: flex; align-items: baseline; flex: 1; }
 
-        /* --- CHỮ KÝ --- */
-        .signature-section { display: flex; justify-content: space-between; text-align: center; margin-top: 5px; }
+        /* --- CHỮ KÝ (ĐÃ SỬA) --- */
+        .signature-section { 
+            display: flex; 
+            justify-content: space-between; 
+            text-align: center; 
+            /* ĐÃ SỬA: Thêm margin-top để tạo khoảng cách cố định với form */
+            margin-top: 25px; 
+        }
         .sig-col { width: 24%; }
         .sig-title { font-weight: bold; font-size: 10.5pt; margin-bottom: 2px; min-height: 19px; }
         .sig-note { font-style: italic; font-size: 9pt; margin-top: 0; margin-bottom: 35px; }
@@ -144,7 +147,7 @@
     <div class="page-wrapper">
         <div class="a4-page" id="print-area">
             
-            <!-- LIÊN 1 (Thêm id="lien-1") -->
+            <!-- LIÊN 1 -->
             <div class="voucher-half" id="lien-1">
                 <div>
                     <div class="header-section">
@@ -228,7 +231,7 @@
             <!-- ĐƯỜNG CẮT -->
             <div class="cut-line"></div>
 
-            <!-- LIÊN 2 (Thêm id="lien-2") -->
+            <!-- LIÊN 2 -->
             <div class="voucher-half" id="lien-2">
                 <div>
                     <div class="header-section">
@@ -313,15 +316,11 @@
     </div>
 
     <script>
-        // HÀM XỬ LÝ CHUYỂN ĐỔI CHẾ ĐỘ IN
+        // JS không thay đổi so với version trước
         function changePrintMode() {
             const mode = document.getElementById('printMode').value;
             const container = document.getElementById('print-area');
-            
-            // Xóa hết class cũ
             container.classList.remove('mode-lien1', 'mode-lien2');
-
-            // Thêm class mới dựa trên select
             if (mode === 'lien1') {
                 container.classList.add('mode-lien1');
             } else if (mode === 'lien2') {
