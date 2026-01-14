@@ -49,13 +49,12 @@
             transition: all 0.3s ease;
         }
 
-        /* --- CẤU HÌNH KHUNG (ĐÃ SỬA) --- */
+        /* --- CẤU HÌNH KHUNG --- */
         .voucher-half {
             height: 50%; 
             padding: 10mm 15mm 5mm 15mm; 
             display: flex;
             flex-direction: column;
-            /* ĐÃ SỬA: Đổi space-between thành flex-start để nội dung dồn lên trên */
             justify-content: flex-start; 
         }
 
@@ -86,21 +85,20 @@
         .voucher-num-line { font-size: 10pt; margin-bottom: 2px; }
 
         /* --- TITLE --- */
-        .title-section { text-align: center; margin-bottom: 15px; } /* Tăng khoảng cách dưới tiêu đề chút */
+        .title-section { text-align: center; margin-bottom: 15px; } 
         .main-title { font-size: 16pt; font-weight: bold; text-transform: uppercase; margin: 0; line-height: 1.2; }
         .date-sub { font-style: italic; font-size: 10.5pt; margin: 2px 0; }
         .copy-info { font-weight: bold; font-size: 9pt; }
 
-        /* --- FORM (ĐÃ SỬA) --- */
+        /* --- FORM --- */
         .form-body { 
-            /* ĐÃ SỬA: Bỏ flex-grow: 1 để form không giãn hết chỗ trống */
             flex-grow: 0; 
             display: flex; 
             flex-direction: column; 
             justify-content: flex-start;
         }
         
-        .line-row { display: flex; align-items: baseline; margin-bottom: 8px; width: 100%; } /* Tăng margin bottom chút cho thoáng */
+        .line-row { display: flex; align-items: baseline; margin-bottom: 8px; width: 100%; }
         .label { white-space: nowrap; margin-right: 5px; font-size: 11pt; }
         .value { flex-grow: 1; border-bottom: 1px dotted #000; font-weight: bold; padding-left: 5px; min-width: 50px; font-size: 11pt; }
         .value.italic { font-weight: normal; font-style: italic; }
@@ -108,12 +106,11 @@
         .double-row { display: flex; align-items: baseline; justify-content: space-between; gap: 15px; margin-bottom: 8px; width: 100%; }
         .half-row { display: flex; align-items: baseline; flex: 1; }
 
-        /* --- CHỮ KÝ (ĐÃ SỬA) --- */
+        /* --- CHỮ KÝ --- */
         .signature-section { 
             display: flex; 
             justify-content: space-between; 
             text-align: center; 
-            /* ĐÃ SỬA: Thêm margin-top để tạo khoảng cách cố định với form */
             margin-top: 25px; 
         }
         .sig-col { width: 24%; }
@@ -133,7 +130,6 @@
 <body>
 
     <div class="actions-container">
-        <!-- SELECT BOX MỚI -->
         <select id="printMode" class="action-select" onchange="changePrintMode()">
             <option value="all">🖨️ In cả 2 Liên (A4)</option>
             <option value="lien1">1️⃣ Chỉ in Liên 1</option>
@@ -206,7 +202,9 @@
                     </div>
                 </div>
 
+                <!-- SIGNATURES -->
                 <div class="signature-section">
+                    <!-- Cột này sẽ thay đổi tiêu đề tùy theo Thu/Chi -->
                     <div class="sig-col">
                         <div class="sig-title data-label-nguoi-nop-ky">Người nộp tiền</div>
                         <p class="sig-note partner-note">(Ký, họ tên)</p>
@@ -291,6 +289,7 @@
                 </div>
 
                 <div class="signature-section">
+                    <!-- Cột này sẽ thay đổi tiêu đề tùy theo Thu/Chi -->
                     <div class="sig-col">
                         <div class="sig-title data-label-nguoi-nop-ky">Người nộp tiền</div>
                         <p class="sig-note partner-note">(Ký, họ tên)</p>
@@ -316,7 +315,6 @@
     </div>
 
     <script>
-        // JS không thay đổi so với version trước
         function changePrintMode() {
             const mode = document.getElementById('printMode').value;
             const container = document.getElementById('print-area');
@@ -399,13 +397,16 @@
 
             setTextByClass('data-tieu-de', isChi ? 'PHIẾU CHI' : 'PHIẾU THU');
             setTextByClass('data-label-ly-do', isChi ? 'Lý do chi:' : 'Lý do nộp:');
-            setTextByClass('data-label-nguoi-nop', 'Khách hàng:');
+            setTextByClass('data-label-nguoi-nop', isChi ? 'Người nhận tiền:' : 'Khách hàng:');
             
+            // LOGIC CHỮ KÝ (ĐÃ SỬA)
             const partnerNotes = document.querySelectorAll('.partner-note');
             if (isChi) {
-                setTextByClass('data-label-nguoi-nop-ky', ''); 
-                partnerNotes.forEach(el => el.style.display = 'none');
+                // Nếu là CHI: Sửa tiêu đề thành "Người nhận tiền", và VẪN HIỆN dòng (Ký, họ tên)
+                setTextByClass('data-label-nguoi-nop-ky', 'Người nhận tiền'); 
+                partnerNotes.forEach(el => el.style.display = 'block');
             } else {
+                // Nếu là THU: Sửa tiêu đề thành "Người nộp tiền", và VẪN HIỆN dòng (Ký, họ tên)
                 setTextByClass('data-label-nguoi-nop-ky', 'Người nộp tiền');
                 partnerNotes.forEach(el => el.style.display = 'block');
             }
